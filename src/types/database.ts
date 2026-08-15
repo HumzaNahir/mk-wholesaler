@@ -25,7 +25,11 @@ export interface Product {
 }
 
 export interface ProductWithCategory extends Product {
-  categories?: Category | null;
+  categories?: {
+    name: string;
+  } | null;
+
+  category?: Category | null;
 }
 
 export interface CartItem {
@@ -49,33 +53,40 @@ export interface Database {
     Tables: {
       categories: {
         Row: Category;
+
         Insert: Partial<
           Omit<Category, "id" | "created_at" | "updated_at">
         > & {
           id?: string;
         };
+
         Update: Partial<
           Omit<Category, "id" | "created_at" | "updated_at">
         >;
+
         Relationships: [];
       };
 
       products: {
         Row: Product;
+
         Insert: Partial<
           Omit<Product, "id" | "created_at" | "updated_at">
         > & {
           id?: string;
           name: string;
         };
+
         Update: Partial<
           Omit<Product, "id" | "created_at" | "updated_at">
         >;
+
         Relationships: [];
       };
 
       business_settings: {
         Row: BusinessSettings;
+
         Insert: Partial<
           Omit<
             BusinessSettings,
@@ -84,12 +95,14 @@ export interface Database {
         > & {
           id?: number;
         };
+
         Update: Partial<
           Omit<
             BusinessSettings,
             "created_at" | "updated_at"
           >
         >;
+
         Relationships: [];
       };
     };
