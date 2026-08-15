@@ -28,14 +28,8 @@ function CustomerLayout() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/categories" element={<Categories />} />
-          <Route
-            path="/category/:id"
-            element={<CategoryProducts />}
-          />
-          <Route
-            path="/product/:id"
-            element={<ProductDetails />}
-          />
+          <Route path="/category/:id" element={<CategoryProducts />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/contact" element={<Contact />} />
 
@@ -51,73 +45,82 @@ function CustomerLayout() {
   );
 }
 
+function AdminLayout() {
+  return (
+    <Routes>
+      <Route path="/login" element={<AdminLogin />} />
+
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/products"
+        element={
+          <ProtectedRoute>
+            <Products />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/products/new"
+        element={
+          <ProtectedRoute>
+            <ProductForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/products/:id/edit"
+        element={
+          <ProtectedRoute>
+            <ProductForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/categories"
+        element={
+          <ProtectedRoute>
+            <AdminCategories />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="*"
+        element={<Navigate to="/admin" replace />}
+      />
+    </Routes>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Admin routes MUST come before the customer wildcard */}
+        <Route path="/admin/*" element={<AdminLayout />} />
+
         {/* Customer website */}
         <Route path="/*" element={<CustomerLayout />} />
-
-        {/* Admin login */}
-        <Route
-          path="/admin/login"
-          element={<AdminLogin />}
-        />
-
-        {/* Protected admin area */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/products"
-          element={
-            <ProtectedRoute>
-              <Products />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/products/new"
-          element={
-            <ProtectedRoute>
-              <ProductForm />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/products/:id/edit"
-          element={
-            <ProtectedRoute>
-              <ProductForm />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/categories"
-          element={
-            <ProtectedRoute>
-              <AdminCategories />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/settings"
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
       </Routes>
     </BrowserRouter>
   );
