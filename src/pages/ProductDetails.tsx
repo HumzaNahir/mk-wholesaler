@@ -6,26 +6,26 @@ import {
   MessageCircle,
   Package,
 } from "lucide-react";
+
 import { supabase } from "../lib/supabase";
 import { useCart } from "../hooks/useCart";
+import type { Product } from "../types/database";
+
 import QuantitySelector from "../components/QuantitySelector";
 import ProductCard, {
   ProductCardData,
 } from "../components/ProductCard";
-import LoadingSkeleton from "../components/LoadingSkeleton";
 import EmptyState from "../components/EmptyState";
-
-interface Product extends ProductCardData {
-  category_id: string;
-}
 
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();
 
   const [product, setProduct] = useState<Product | null>(null);
+
   const [relatedProducts, setRelatedProducts] = useState<
     ProductCardData[]
   >([]);
+
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -33,7 +33,10 @@ export default function ProductDetails() {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
 
     const loadProduct = async () => {
       setLoading(true);
@@ -41,28 +44,65 @@ export default function ProductDetails() {
       const { data, error } = await supabase
         .from("products")
         .select(
-          "id, category_id, name, description, sku, brand, price, unit, image_url",
+          "id, category_id, name, description, sku, brand, price, unit, image_url, is_active",
         )
         .eq("id", id)
         .eq("is_active", true)
         .maybeSingle();
 
-      if (!error && data) {
-        setProduct(data);
-
-        const { data: related } = await supabase
-          .from("products")
-          .select(
-            "id, name, description, sku, brand, price, unit, image_url",
-          )
-          .eq("category_id", data.category_id)
-          .eq("is_active", true)
-          .neq("id", data.id)
-          .limit(4);
-
-        setRelatedProducts(related ?? []);
-      } else {
+      if (error) {
+        console.error("Error loading product:", error);
         setProduct(null);
+        setLoading(false);
+        return;
+      }
+
+      if (!data) {
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
+
+      const currentProduct: Product = {
+        id: data.id,
+        name: data.name,
+        category_id: data.category_id,
+        description: data.description,
+        sku: data.sku,
+        brand: data.brand,
+        price: data.price,
+        unit: data.unit,
+        image_url: data.image_url,
+        is_active: data.is_active,
+      };
+
+      setProduct(currentProduct);
+
+      if (data.category_id) {
+        const { data: related, error: relatedError } =
+          await supabase
+            .from("products")
+            .select(
+              "id, category_id, name, description, sku, brand, price, unit, image_url, is_active",
+            )
+            .eq("category_id", data.category_id)
+            .eq("is_active", true)
+            .neq("id", data.id)
+            .limit(4);
+
+        if (relatedError) {
+          console.error(
+            "Error loading related products:",
+            relatedError,
+          );
+          setRelatedProducts([]);
+        } else {
+          setRelatedProducts(
+            (related ?? []) as ProductCardData[],
+          );
+        }
+      } else {
+        setRelatedProducts([]);
       }
 
       setLoading(false);
@@ -87,6 +127,7 @@ export default function ProductDetails() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-2">
           <div className="aspect-square animate-pulse rounded-3xl bg-slate-200" />
+
           <div className="space-y-5">
             <div className="h-5 w-24 animate-pulse rounded bg-slate-200" />
             <div className="h-12 w-3/4 animate-pulse rounded bg-slate-200" />
@@ -130,7 +171,7 @@ export default function ProductDetails() {
         </Link>
 
         <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-16">
-          {/* Image */}
+          {/* Product Image */}
           <div className="overflow-hidden rounded-3xl bg-slate-100">
             {product.image_url ? (
               <img
@@ -141,6 +182,7 @@ export default function ProductDetails() {
             ) : (
               <div className="flex aspect-square w-full flex-col items-center justify-center gap-3 text-slate-400">
                 <Package className="h-20 w-20" />
+
                 <span className="text-sm font-semibold">
                   No image available
                 </span>
@@ -148,7 +190,7 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* Information */}
+          {/* Product Information */}
           <div className="flex flex-col justify-center">
             {product.brand && (
               <p className="text-sm font-bold uppercase tracking-wider text-emerald-600">
@@ -232,13 +274,13 @@ export default function ProductDetails() {
             </button>
 
             <p className="mt-3 text-center text-xs text-slate-400">
-              Add this product to your enquiry list, then contact us on
-              WhatsApp.
+              Add this product to your enquiry list, then contact us
+              on WhatsApp.
             </p>
           </div>
         </div>
 
-        {/* Related */}
+        {/* Related Products */}
         {relatedProducts.length > 0 && (
           <section className="mt-20 border-t border-slate-200 pt-12">
             <h2 className="text-2xl font-black text-slate-900">
