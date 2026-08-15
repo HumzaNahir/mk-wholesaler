@@ -2,9 +2,15 @@ import { Link } from "react-router-dom";
 import { ShoppingBag, Plus, Package } from "lucide-react";
 import type { Product } from "../types/database";
 
+// Backwards-compatible alias for existing pages
+export type ProductCardData = Product;
+
 interface ProductCardProps {
-  product: Product;
-  onAddToCart?: (product: Product, quantity?: number) => void;
+  product: ProductCardData;
+  onAddToCart?: (
+    product: ProductCardData,
+    quantity?: number,
+  ) => void;
 }
 
 export default function ProductCard({
