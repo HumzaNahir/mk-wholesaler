@@ -1,25 +1,31 @@
 export interface Category {
   id: string;
   name: string;
-  description: string | null;
-  image_url: string | null;
-  sort_order: number;
-  is_active: boolean;
+  description?: string | null;
+  image_url?: string | null;
+  sort_order?: number;
+  is_active?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface Product {
   id: string;
-  category_id: string | null;
   name: string;
-  description: string | null;
-  sku: string | null;
-  brand: string | null;
-  price: number | null;
-  unit: string | null;
-  image_url: string | null;
-  is_active: boolean;
+
+  category_id?: string | null;
+
+  description?: string | null;
+  sku?: string | null;
+  brand?: string | null;
+
+  price?: number | null;
+  unit?: string | null;
+
+  image_url?: string | null;
+
+  is_active?: boolean;
+
   created_at?: string;
   updated_at?: string;
 }
@@ -28,8 +34,6 @@ export interface ProductWithCategory extends Product {
   categories?: {
     name: string;
   } | null;
-
-  category?: Category | null;
 }
 
 export interface CartItem {
@@ -58,6 +62,7 @@ export interface Database {
           Omit<Category, "id" | "created_at" | "updated_at">
         > & {
           id?: string;
+          name: string;
         };
 
         Update: Partial<
@@ -108,11 +113,8 @@ export interface Database {
     };
 
     Views: Record<string, never>;
-
     Functions: Record<string, never>;
-
     Enums: Record<string, never>;
-
     CompositeTypes: Record<string, never>;
   };
 }
