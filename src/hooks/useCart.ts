@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CartItem, Product } from "../types/database";
+
 import {
-  addToCart,
-  clearCart,
+  addToCart as addProductToCart,
+  clearCart as clearStoredCart,
   getCart,
-  removeFromCart,
-  updateCartQuantity,
+  removeFromCart as removeProductFromCart,
+  updateCartQuantity as updateStoredCartQuantity,
 } from "../lib/cart";
 
 export function useCart() {
@@ -24,7 +25,10 @@ export function useCart() {
       refreshCart();
     };
 
-    window.addEventListener("cart-updated", handleCartUpdate);
+    window.addEventListener(
+      "cart-updated",
+      handleCartUpdate,
+    );
 
     return () => {
       window.removeEventListener(
@@ -34,11 +38,11 @@ export function useCart() {
     };
   }, [refreshCart]);
 
-  const addItem = useCallback(
+  const addToCart = useCallback(
     (product: Product, quantity = 1) => {
       if (quantity <= 0) return;
 
-      const updated = addToCart({
+      const updated = addProductToCart({
         product,
         quantity,
       });
@@ -50,7 +54,7 @@ export function useCart() {
 
   const updateQuantity = useCallback(
     (productId: string, quantity: number) => {
-      const updated = updateCartQuantity(
+      const updated = updateStoredCartQuantity(
         productId,
         quantity,
       );
@@ -60,14 +64,18 @@ export function useCart() {
     [],
   );
 
-  const removeItem = useCallback((productId: string) => {
-    const updated = removeFromCart(productId);
+  const removeFromCart = useCallback(
+    (productId: string) => {
+      const updated =
+        removeProductFromCart(productId);
 
-    setItems(updated);
-  }, []);
+      setItems(updated);
+    },
+    [],
+  );
 
-  const emptyCart = useCallback(() => {
-    clearCart();
+  const clearCart = useCallback(() => {
+    clearStoredCart();
     setItems([]);
   }, []);
 
@@ -92,10 +100,15 @@ export function useCart() {
     total,
     initialized,
 
-    addItem,
+    // Main API
+    addToCart,
     updateQuantity,
-    removeItem,
-    clearCart: emptyCart,
+    removeFromCart,
+    clearCart,
     refreshCart,
+
+    // Aliases for components that use the alternative names
+    addItem: addToCart,
+    removeItem: removeFromCart,
   };
 }
