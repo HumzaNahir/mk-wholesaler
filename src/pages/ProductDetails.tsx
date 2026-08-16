@@ -6,26 +6,26 @@ import {
   MessageCircle,
   Package,
 } from "lucide-react";
-
 import { supabase } from "../lib/supabase";
 import { useCart } from "../hooks/useCart";
-import type { Product } from "../types/database";
-
 import QuantitySelector from "../components/QuantitySelector";
 import ProductCard, {
   ProductCardData,
 } from "../components/ProductCard";
 import EmptyState from "../components/EmptyState";
 
+interface Product extends ProductCardData {
+  category_id: string;
+  is_active: boolean;
+}
+
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();
 
   const [product, setProduct] = useState<Product | null>(null);
-
   const [relatedProducts, setRelatedProducts] = useState<
     ProductCardData[]
   >([]);
-
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -33,10 +33,7 @@ export default function ProductDetails() {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+    if (!id) return;
 
     const loadProduct = async () => {
       setLoading(true);
@@ -44,65 +41,32 @@ export default function ProductDetails() {
       const { data, error } = await supabase
         .from("products")
         .select(
-          "id, category_id, name, description, sku, brand, price, unit, image_url, is_active",
+          "id, category_id, name, description, brand, price, unit, image_url, is_active",
         )
         .eq("id", id)
         .eq("is_active", true)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error loading product:", error);
-        setProduct(null);
-        setLoading(false);
-        return;
-      }
+      if (!error && data) {
+        const currentProduct = data as Product;
 
-      if (!data) {
-        setProduct(null);
-        setLoading(false);
-        return;
-      }
+        setProduct(currentProduct);
 
-      const currentProduct: Product = {
-        id: data.id,
-        name: data.name,
-        category_id: data.category_id,
-        description: data.description,
-        sku: data.sku,
-        brand: data.brand,
-        price: data.price,
-        unit: data.unit,
-        image_url: data.image_url,
-        is_active: data.is_active,
-      };
+        const { data: related } = await supabase
+          .from("products")
+          .select(
+            "id, name, description, brand, price, unit, image_url",
+          )
+          .eq("category_id", currentProduct.category_id)
+          .eq("is_active", true)
+          .neq("id", currentProduct.id)
+          .limit(4);
 
-      setProduct(currentProduct);
-
-      if (data.category_id) {
-        const { data: related, error: relatedError } =
-          await supabase
-            .from("products")
-            .select(
-              "id, category_id, name, description, sku, brand, price, unit, image_url, is_active",
-            )
-            .eq("category_id", data.category_id)
-            .eq("is_active", true)
-            .neq("id", data.id)
-            .limit(4);
-
-        if (relatedError) {
-          console.error(
-            "Error loading related products:",
-            relatedError,
-          );
-          setRelatedProducts([]);
-        } else {
-          setRelatedProducts(
-            (related ?? []) as ProductCardData[],
-          );
-        }
+        setRelatedProducts(
+          (related ?? []) as ProductCardData[],
+        );
       } else {
-        setRelatedProducts([]);
+        setProduct(null);
       }
 
       setLoading(false);
@@ -171,7 +135,6 @@ export default function ProductDetails() {
         </Link>
 
         <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-16">
-          {/* Product Image */}
           <div className="overflow-hidden rounded-3xl bg-slate-100">
             {product.image_url ? (
               <img
@@ -182,7 +145,6 @@ export default function ProductDetails() {
             ) : (
               <div className="flex aspect-square w-full flex-col items-center justify-center gap-3 text-slate-400">
                 <Package className="h-20 w-20" />
-
                 <span className="text-sm font-semibold">
                   No image available
                 </span>
@@ -190,7 +152,6 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* Product Information */}
           <div className="flex flex-col justify-center">
             {product.brand && (
               <p className="text-sm font-bold uppercase tracking-wider text-emerald-600">
@@ -201,12 +162,6 @@ export default function ProductDetails() {
             <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
               {product.name}
             </h1>
-
-            {product.sku && (
-              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-400">
-                SKU: {product.sku}
-              </p>
-            )}
 
             <div className="mt-7 border-y border-slate-200 py-6">
               {hasPrice ? (
@@ -274,13 +229,12 @@ export default function ProductDetails() {
             </button>
 
             <p className="mt-3 text-center text-xs text-slate-400">
-              Add this product to your enquiry list, then contact us
-              on WhatsApp.
+              Add this product to your enquiry list, then contact us on
+              WhatsApp.
             </p>
           </div>
         </div>
 
-        {/* Related Products */}
         {relatedProducts.length > 0 && (
           <section className="mt-20 border-t border-slate-200 pt-12">
             <h2 className="text-2xl font-black text-slate-900">
@@ -292,7 +246,7 @@ export default function ProductDetails() {
                 <ProductCard
                   key={relatedProduct.id}
                   product={relatedProduct}
-                  onAddToCart={addToCart}
+                  onAddToCart={(item) => addToCart(item, 1)}
                 />
               ))}
             </div>
