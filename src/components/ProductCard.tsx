@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
 import { ShoppingBag, Plus, Package } from "lucide-react";
-import type { Product } from "../types/database";
 
-// Backwards-compatible alias for existing pages
-export type ProductCardData = Product;
+export interface ProductCardData {
+  id: string;
+  name: string;
+  description?: string | null;
+  brand?: string | null;
+  price?: number | null;
+  unit?: string | null;
+  image_url?: string | null;
+}
 
 interface ProductCardProps {
   product: ProductCardData;
-  onAddToCart?: (
-    product: ProductCardData,
-    quantity?: number,
-  ) => void;
+  onAddToCart?: (product: ProductCardData) => void;
 }
 
 export default function ProductCard({
@@ -57,12 +60,6 @@ export default function ProductCard({
       </Link>
 
       <div className="flex flex-1 flex-col p-4">
-        {product.sku && (
-          <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
-            SKU: {product.sku}
-          </p>
-        )}
-
         <Link to={`/product/${product.id}`}>
           <h3 className="line-clamp-2 text-sm font-bold leading-5 text-slate-900 transition group-hover:text-emerald-700 sm:text-base">
             {product.name}
@@ -98,7 +95,7 @@ export default function ProductCard({
             {onAddToCart && (
               <button
                 type="button"
-                onClick={() => onAddToCart(product, 1)}
+                onClick={() => onAddToCart(product)}
                 aria-label={`Add ${product.name} to enquiry`}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white transition hover:bg-emerald-600 active:scale-95"
               >
@@ -110,7 +107,7 @@ export default function ProductCard({
           {onAddToCart && (
             <button
               type="button"
-              onClick={() => onAddToCart(product, 1)}
+              onClick={() => onAddToCart(product)}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
             >
               <ShoppingBag className="h-4 w-4" />
