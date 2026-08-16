@@ -60,13 +60,10 @@ export default function ProductForm() {
       const categoriesPromise = supabase
         .from("categories")
         .select("id, name")
-        .order("sort_order", {
-          ascending: true,
-        });
+        .order("sort_order", { ascending: true });
 
       if (!editing || !id) {
         const { data } = await categoriesPromise;
-
         setCategories(data ?? []);
         return;
       }
@@ -140,8 +137,7 @@ export default function ProductForm() {
 
     if (
       form.price.trim() !== "" &&
-      (Number.isNaN(Number(form.price)) ||
-        Number(form.price) < 0)
+      Number.isNaN(Number(form.price))
     ) {
       setError("Please enter a valid price.");
       return;
@@ -151,8 +147,7 @@ export default function ProductForm() {
 
     const payload = {
       name: form.name.trim(),
-      description:
-        form.description.trim() || null,
+      description: form.description.trim() || null,
       brand: form.brand.trim() || null,
       price:
         form.price.trim() === ""
@@ -194,11 +189,10 @@ export default function ProductForm() {
 
     setSaving(true);
 
-    const { error: deleteError } =
-      await supabase
-        .from("products")
-        .delete()
-        .eq("id", id);
+    const { error: deleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id);
 
     if (deleteError) {
       setError(deleteError.message);
@@ -213,7 +207,6 @@ export default function ProductForm() {
     return (
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="h-10 w-64 animate-pulse rounded bg-slate-200" />
-
         <div className="mt-8 h-[600px] animate-pulse rounded-2xl bg-slate-200" />
       </div>
     );
@@ -222,7 +215,6 @@ export default function ProductForm() {
   return (
     <div className="min-h-screen bg-slate-50">
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-
         <Link
           to="/admin/products"
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900"
@@ -233,9 +225,7 @@ export default function ProductForm() {
 
         <div className="mt-7">
           <h1 className="text-3xl font-black text-slate-900">
-            {editing
-              ? "Edit Product"
-              : "Add Product"}
+            {editing ? "Edit Product" : "Add Product"}
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
@@ -256,8 +246,6 @@ export default function ProductForm() {
           )}
 
           <div className="grid gap-6 md:grid-cols-2">
-
-            {/* Product name */}
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Product Name *
@@ -266,10 +254,7 @@ export default function ProductForm() {
               <input
                 value={form.name}
                 onChange={(event) =>
-                  updateField(
-                    "name",
-                    event.target.value,
-                  )
+                  updateField("name", event.target.value)
                 }
                 required
                 placeholder="e.g. PVC Elbow 20mm"
@@ -277,7 +262,6 @@ export default function ProductForm() {
               />
             </div>
 
-            {/* Category */}
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Category *
@@ -294,9 +278,7 @@ export default function ProductForm() {
                 required
                 className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               >
-                <option value="">
-                  Select category
-                </option>
+                <option value="">Select category</option>
 
                 {categories.map((category) => (
                   <option
@@ -309,7 +291,6 @@ export default function ProductForm() {
               </select>
             </div>
 
-            {/* Brand */}
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Brand
@@ -318,17 +299,13 @@ export default function ProductForm() {
               <input
                 value={form.brand}
                 onChange={(event) =>
-                  updateField(
-                    "brand",
-                    event.target.value,
-                  )
+                  updateField("brand", event.target.value)
                 }
                 placeholder="Optional brand"
                 className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               />
             </div>
 
-            {/* Price */}
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Price (R)
@@ -340,17 +317,13 @@ export default function ProductForm() {
                 step="0.01"
                 value={form.price}
                 onChange={(event) =>
-                  updateField(
-                    "price",
-                    event.target.value,
-                  )
+                  updateField("price", event.target.value)
                 }
                 placeholder="e.g. 49.99"
                 className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               />
             </div>
 
-            {/* Unit */}
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Unit
@@ -359,32 +332,24 @@ export default function ProductForm() {
               <input
                 value={form.unit}
                 onChange={(event) =>
-                  updateField(
-                    "unit",
-                    event.target.value,
-                  )
+                  updateField("unit", event.target.value)
                 }
                 placeholder="piece, box, litre, etc."
                 className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               />
             </div>
 
-            {/* IMAGE UPLOAD */}
             <div className="md:col-span-2">
               <ImageUpload
                 value={form.image_url}
                 onChange={(url) =>
-                  updateField(
-                    "image_url",
-                    url,
-                  )
+                  updateField("image_url", url)
                 }
                 folder="products"
                 label="Product Image"
               />
             </div>
 
-            {/* Description */}
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Description
@@ -404,7 +369,6 @@ export default function ProductForm() {
               />
             </div>
 
-            {/* Active */}
             <label className="flex cursor-pointer items-center gap-3 md:col-span-2">
               <input
                 type="checkbox"
@@ -430,9 +394,7 @@ export default function ProductForm() {
             </label>
           </div>
 
-          {/* Buttons */}
           <div className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between">
-
             {editing ? (
               <button
                 type="button"
