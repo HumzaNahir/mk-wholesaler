@@ -14,7 +14,6 @@ import { supabase } from "../../lib/supabase";
 interface Product {
   id: string;
   name: string;
-  sku: string | null;
   brand: string | null;
   price: number | null;
   unit: string | null;
@@ -24,7 +23,7 @@ interface Product {
   categories:
     | {
         name: string;
-      }[]
+      }
     | null;
 }
 
@@ -40,14 +39,11 @@ export default function Products() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, sku, brand, price, unit, image_url, is_active, category_id, categories(name)",
+        "id, name, brand, price, unit, image_url, is_active, category_id, categories(name)",
       )
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Could not load products:", error);
-      setProducts([]);
-    } else {
+    if (!error) {
       setProducts((data ?? []) as Product[]);
     }
 
@@ -63,14 +59,10 @@ export default function Products() {
 
     if (!value) return true;
 
-    const categoryName =
-      product.categories?.[0]?.name ?? "";
-
     return (
       product.name.toLowerCase().includes(value) ||
-      product.sku?.toLowerCase().includes(value) ||
       product.brand?.toLowerCase().includes(value) ||
-      categoryName.toLowerCase().includes(value)
+      product.categories?.name.toLowerCase().includes(value)
     );
   });
 
@@ -86,15 +78,10 @@ export default function Products() {
       setProducts((current) =>
         current.map((item) =>
           item.id === product.id
-            ? {
-                ...item,
-                is_active: !item.is_active,
-              }
+            ? { ...item, is_active: !item.is_active }
             : item,
         ),
       );
-    } else {
-      window.alert("Could not update product status.");
     }
   };
 
@@ -114,12 +101,10 @@ export default function Products() {
 
     if (!error) {
       setProducts((current) =>
-        current.filter(
-          (item) => item.id !== product.id,
-        ),
+        current.filter((item) => item.id !== product.id),
       );
     } else {
-      window.alert("Could not delete this product.");
+      window.alert(error.message);
     }
 
     setDeleting(null);
@@ -158,10 +143,8 @@ export default function Products() {
           <input
             type="search"
             value={search}
-            onChange={(event) =>
-              setSearch(event.target.value)
-            }
-            placeholder="Search products, SKU, brand or category..."
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search products, brand or category..."
             className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-12 pr-4 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
           />
         </div>
@@ -185,7 +168,7 @@ export default function Products() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[850px] text-left">
+              <table className="w-full min-w-[800px] text-left">
                 <thead className="border-b border-slate-200 bg-slate-50">
                   <tr>
                     <th className="px-5 py-4 text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -211,111 +194,94 @@ export default function Products() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
-                  {filteredProducts.map((product) => {
-                    const categoryName =
-                      product.categories?.[0]?.name ??
-                      "Uncategorised";
-
-                    return (
-                      <tr
-                        key={product.id}
-                        className="transition hover:bg-slate-50"
-                      >
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                              {product.image_url ? (
-                                <img
-                                  src={product.image_url}
-                                  alt=""
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center">
-                                  <Package className="h-5 w-5 text-slate-300" />
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="font-bold text-slate-900">
-                                {product.name}
-                              </p>
-
-                              <p className="mt-1 text-xs text-slate-400">
-                                {product.sku
-                                  ? `SKU: ${product.sku}`
-                                  : product.brand ||
-                                    "No SKU"}
-                              </p>
-                            </div>
+                  {filteredProducts.map((product) => (
+                    <tr
+                      key={product.id}
+                      className="transition hover:bg-slate-50"
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                            {product.image_url ? (
+                              <img
+                                src={product.image_url}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <Package className="h-5 w-5 text-slate-300" />
+                              </div>
+                            )}
                           </div>
-                        </td>
 
-                        <td className="px-5 py-4 text-sm text-slate-600">
-                          {categoryName}
-                        </td>
+                          <div className="min-w-0">
+                            <p className="font-bold text-slate-900">
+                              {product.name}
+                            </p>
 
-                        <td className="px-5 py-4 text-sm font-bold text-slate-900">
-                          {product.price !== null
-                            ? `R${Number(
-                                product.price,
-                              ).toFixed(2)}`
-                            : "Contact"}
-                        </td>
+                            <p className="mt-1 text-xs text-slate-400">
+                              {product.brand || "No brand"}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
 
-                        <td className="px-5 py-4">
+                      <td className="px-5 py-4 text-sm text-slate-600">
+                        {product.categories?.name || "Uncategorised"}
+                      </td>
+
+                      <td className="px-5 py-4 text-sm font-bold text-slate-900">
+                        {product.price !== null
+                          ? `R${Number(product.price).toFixed(2)}`
+                          : "Contact"}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <button
+                          type="button"
+                          onClick={() => toggleActive(product)}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                            product.is_active
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {product.is_active ? (
+                            <Eye className="h-3.5 w-3.5" />
+                          ) : (
+                            <EyeOff className="h-3.5 w-3.5" />
+                          )}
+
+                          {product.is_active
+                            ? "Active"
+                            : "Hidden"}
+                        </button>
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <div className="flex justify-end gap-2">
+                          <Link
+                            to={`/admin/products/${product.id}/edit`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600"
+                            aria-label={`Edit ${product.name}`}
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </Link>
+
                           <button
                             type="button"
-                            onClick={() =>
-                              toggleActive(product)
-                            }
-                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
-                              product.is_active
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-slate-100 text-slate-500"
-                            }`}
+                            onClick={() => deleteProduct(product)}
+                            disabled={deleting === product.id}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-600 disabled:opacity-50"
+                            aria-label={`Delete ${product.name}`}
                           >
-                            {product.is_active ? (
-                              <Eye className="h-3.5 w-3.5" />
-                            ) : (
-                              <EyeOff className="h-3.5 w-3.5" />
-                            )}
-
-                            {product.is_active
-                              ? "Active"
-                              : "Hidden"}
+                            <Trash2 className="h-4 w-4" />
                           </button>
-                        </td>
-
-                        <td className="px-5 py-4">
-                          <div className="flex justify-end gap-2">
-                            <Link
-                              to={`/admin/products/${product.id}/edit`}
-                              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600"
-                              aria-label={`Edit ${product.name}`}
-                            >
-                              <Edit3 className="h-4 w-4" />
-                            </Link>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                deleteProduct(product)
-                              }
-                              disabled={
-                                deleting === product.id
-                              }
-                              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-600 disabled:opacity-50"
-                              aria-label={`Delete ${product.name}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
