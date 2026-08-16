@@ -10,6 +10,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import ImageUpload from "../../components/ImageUpload";
 
 interface Category {
   id: string;
@@ -37,19 +38,20 @@ const emptyForm: CategoryForm = {
 };
 
 export default function Categories() {
-  const [categories, setCategories] = useState<Category[]>(
-    [],
-  );
+  const [categories, setCategories] =
+    useState<Category[]>([]);
 
   const [form, setForm] =
     useState<CategoryForm>(emptyForm);
 
-  const [editingId, setEditingId] = useState<string | null>(
-    null,
-  );
+  const [editingId, setEditingId] =
+    useState<string | null>(null);
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
 
   const loadCategories = async () => {
     setLoading(true);
@@ -59,7 +61,9 @@ export default function Categories() {
       .select(
         "id, name, description, image_url, sort_order, is_active",
       )
-      .order("sort_order", { ascending: true });
+      .order("sort_order", {
+        ascending: true,
+      });
 
     if (!error) {
       setCategories(data ?? []);
@@ -94,7 +98,9 @@ export default function Categories() {
       name: category.name,
       description: category.description ?? "",
       image_url: category.image_url ?? "",
-      sort_order: String(category.sort_order ?? 0),
+      sort_order: String(
+        category.sort_order ?? 0,
+      ),
       is_active: category.is_active,
     });
 
@@ -104,11 +110,15 @@ export default function Categories() {
     });
   };
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (
+    event: FormEvent,
+  ) => {
     event.preventDefault();
 
     if (!form.name.trim()) {
-      window.alert("Category name is required.");
+      window.alert(
+        "Category name is required.",
+      );
       return;
     }
 
@@ -116,9 +126,12 @@ export default function Categories() {
 
     const payload = {
       name: form.name.trim(),
-      description: form.description.trim() || null,
-      image_url: form.image_url.trim() || null,
-      sort_order: Number(form.sort_order) || 0,
+      description:
+        form.description.trim() || null,
+      image_url:
+        form.image_url.trim() || null,
+      sort_order:
+        Number(form.sort_order) || 0,
       is_active: form.is_active,
     };
 
@@ -127,7 +140,9 @@ export default function Categories() {
           .from("categories")
           .update(payload)
           .eq("id", editingId)
-      : await supabase.from("categories").insert(payload);
+      : await supabase
+          .from("categories")
+          .insert(payload);
 
     if (result.error) {
       window.alert(result.error.message);
@@ -141,7 +156,9 @@ export default function Categories() {
     setSaving(false);
   };
 
-  const toggleActive = async (category: Category) => {
+  const toggleActive = async (
+    category: Category,
+  ) => {
     const { error } = await supabase
       .from("categories")
       .update({
@@ -155,7 +172,8 @@ export default function Categories() {
           item.id === category.id
             ? {
                 ...item,
-                is_active: !item.is_active,
+                is_active:
+                  !item.is_active,
               }
             : item,
         ),
@@ -163,7 +181,9 @@ export default function Categories() {
     }
   };
 
-  const deleteCategory = async (category: Category) => {
+  const deleteCategory = async (
+    category: Category,
+  ) => {
     const confirmed = window.confirm(
       `Delete "${category.name}"? Products assigned to this category may prevent deletion.`,
     );
@@ -183,7 +203,9 @@ export default function Categories() {
     }
 
     setCategories((current) =>
-      current.filter((item) => item.id !== category.id),
+      current.filter(
+        (item) => item.id !== category.id,
+      ),
     );
 
     if (editingId === category.id) {
@@ -194,6 +216,7 @@ export default function Categories() {
   return (
     <div className="min-h-screen bg-slate-50">
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
         <div>
           <p className="text-sm font-bold uppercase tracking-wider text-emerald-600">
             Catalogue
@@ -208,7 +231,7 @@ export default function Categories() {
           </p>
         </div>
 
-        {/* Form */}
+        {/* FORM */}
         <form
           onSubmit={handleSubmit}
           className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
@@ -233,6 +256,8 @@ export default function Categories() {
           </div>
 
           <div className="mt-6 grid gap-5 md:grid-cols-2">
+
+            {/* Name */}
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Category Name *
@@ -241,7 +266,10 @@ export default function Categories() {
               <input
                 value={form.name}
                 onChange={(event) =>
-                  updateField("name", event.target.value)
+                  updateField(
+                    "name",
+                    event.target.value,
+                  )
                 }
                 required
                 placeholder="e.g. Plumbing"
@@ -249,6 +277,7 @@ export default function Categories() {
               />
             </div>
 
+            {/* Sort */}
             <div>
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Sort Order
@@ -267,24 +296,22 @@ export default function Categories() {
               />
             </div>
 
+            {/* IMAGE UPLOAD */}
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-bold text-slate-700">
-                Image URL
-              </label>
-
-              <input
+              <ImageUpload
                 value={form.image_url}
-                onChange={(event) =>
+                onChange={(url) =>
                   updateField(
                     "image_url",
-                    event.target.value,
+                    url,
                   )
                 }
-                placeholder="https://..."
-                className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+                folder="categories"
+                label="Category Image"
               />
             </div>
 
+            {/* Description */}
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm font-bold text-slate-700">
                 Description
@@ -304,6 +331,7 @@ export default function Categories() {
               />
             </div>
 
+            {/* Active */}
             <label className="flex items-center gap-3 md:col-span-2">
               <input
                 type="checkbox"
@@ -350,7 +378,7 @@ export default function Categories() {
           </div>
         </form>
 
-        {/* Category list */}
+        {/* LIST */}
         <section className="mt-8">
           <h2 className="text-xl font-black text-slate-900">
             All Categories
@@ -371,92 +399,109 @@ export default function Categories() {
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
-                {categories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div className="flex min-w-0 items-center gap-4">
-                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                        {category.image_url ? (
-                          <img
-                            src={category.image_url}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <FolderOpen className="h-6 w-6 text-slate-300" />
-                          </div>
-                        )}
-                      </div>
+                {categories.map(
+                  (category) => (
+                    <div
+                      key={category.id}
+                      className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex min-w-0 items-center gap-4">
 
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-bold text-slate-900">
-                            {category.name}
-                          </h3>
-
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${
-                              category.is_active
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-slate-100 text-slate-500"
-                            }`}
-                          >
-                            {category.is_active ? (
-                              <Eye className="h-3 w-3" />
-                            ) : (
-                              <EyeOff className="h-3 w-3" />
-                            )}
-
-                            {category.is_active
-                              ? "Active"
-                              : "Hidden"}
-                          </span>
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                          {category.image_url ? (
+                            <img
+                              src={
+                                category.image_url
+                              }
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <FolderOpen className="h-6 w-6 text-slate-300" />
+                            </div>
+                          )}
                         </div>
 
-                        <p className="mt-1 line-clamp-1 text-sm text-slate-500">
-                          {category.description ||
-                            "No description"}
-                        </p>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-bold text-slate-900">
+                              {category.name}
+                            </h3>
+
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${
+                                category.is_active
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
+                              {category.is_active ? (
+                                <Eye className="h-3 w-3" />
+                              ) : (
+                                <EyeOff className="h-3 w-3" />
+                              )}
+
+                              {category.is_active
+                                ? "Active"
+                                : "Hidden"}
+                            </span>
+                          </div>
+
+                          <p className="mt-1 line-clamp-1 text-sm text-slate-500">
+                            {category.description ||
+                              "No description"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 gap-2">
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toggleActive(
+                              category,
+                            )
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-emerald-600"
+                          aria-label="Toggle category visibility"
+                        >
+                          {category.is_active ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            startEdit(category)
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-emerald-600"
+                          aria-label="Edit category"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            deleteCategory(
+                              category,
+                            )
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-red-600"
+                          aria-label="Delete category"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+
                       </div>
                     </div>
-
-                    <div className="flex shrink-0 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => toggleActive(category)}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-emerald-600"
-                        aria-label="Toggle category visibility"
-                      >
-                        {category.is_active ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => startEdit(category)}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-emerald-600"
-                        aria-label="Edit category"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => deleteCategory(category)}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-red-600"
-                        aria-label="Delete category"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             )}
           </div>
